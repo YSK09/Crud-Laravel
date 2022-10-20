@@ -3,14 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use PDF;
 use Illuminate\Http\Request;
 use PhpParser\Node\Expr\Empty_;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Employee::all();
+        if($request->has('search'))
+        {
+            $data = Employee::where('nama','LIKE','%' .$request->search.'%')->paginate(3);
+        }else{
+            $data = Employee::paginate(3);
+        }
+
         return view('datapegawai',compact('data'));
     }
 
@@ -59,5 +66,15 @@ class EmployeeController extends Controller
         $data->delete();
 
         return redirect()->route('pegawai')->with('success', 'Data Berhasil di Hapus');
+    }
+
+    public function exportpdf()
+    {
+        $data = Employee::all();
+
+        view()->share('data', $data);
+        $pdf = PDF::loadview('datapegawai-pdf');
+
+        return $pdf->download('Datawaifu.pdf');
     }
 }
